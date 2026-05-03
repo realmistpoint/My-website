@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Hashtag Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --bg2: #0d1220;
+    --surface: rgba(15, 22, 40, 0.7);
+    --card: rgba(14, 20, 38, 0.85);
+    --border: rgba(59, 130, 246, 0.12);
+    --border-bright: rgba(59, 130, 246, 0.3);
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --purple: #8b5cf6;
+    --glow: rgba(59, 130, 246, 0.18);
+    --text: #f0f4ff;
+    --muted: #6b7a99;
+    --muted2: #4a5470;
+    --tag-bg: rgba(59, 130, 246, 0.07);
+    --success: #22c55e;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── AMBIENT ORBS ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+    z-index: 0;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    top: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    animation: drift1 18s ease-in-out infinite;
+  }
+  .orb-2 {
+    width: 500px; height: 500px;
+    bottom: -150px; right: -100px;
+    background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+    animation: drift2 22s ease-in-out infinite;
+  }
+  .orb-3 {
+    width: 300px; height: 300px;
+    top: 40%; right: 10%;
+    background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+    animation: drift3 15s ease-in-out infinite;
+  }
+  @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
+  @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
+  @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-25px)} }
+
+  /* Grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 64px 24px 0;
+    text-align: center;
+    animation: fadeDown 0.7s ease both;
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    border: 1px solid rgba(59,130,246,0.25);
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+    background: rgba(59,130,246,0.06);
+    backdrop-filter: blur(8px);
+  }
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 8px var(--blue);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  h1 {
+    font-size: clamp(2rem, 5.5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  h1 .grad {
+    background: linear-gradient(135deg, var(--blue-light) 0%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 400px;
+    margin: 0 auto 56px;
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  /* ── STATS ── */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--blue-light), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 10;
+    padding: 0 16px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .tab-track {
+    display: inline-flex;
+    background: rgba(15,22,40,0.9);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 5px;
+    backdrop-filter: blur(12px);
+    gap: 4px;
+  }
+  .tab-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 28px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(.4,0,.2,1);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.35), 0 0 0 1px rgba(139,92,246,0.2);
+    transform: translateY(-1px);
+  }
+  .tab-btn:not(.active):hover {
+    color: var(--text);
+    background: rgba(59,130,246,0.07);
+  }
+
+  /* ── MAIN ── */
+  main {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px 100px;
+    animation: fadeUp 0.7s 0.4s ease both;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03) inset,
+      0 32px 64px rgba(0,0,0,0.4),
+      0 0 80px rgba(59,130,246,0.04);
+    transition: box-shadow 0.3s ease;
+  }
+  .card:hover {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 32px 64px rgba(0,0,0,0.45),
+      0 0 100px rgba(59,130,246,0.07);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 5%; right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(139,92,246,0.4), transparent);
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-icon {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.15));
+    border: 1px solid rgba(59,130,246,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .section-info h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .section-info p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+    margin-bottom: 24px;
+  }
+
+  /* ── SELECT ── */
+  .field-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .select-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 16px; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--muted);
+    pointer-events: none;
+  }
+  select {
+    width: 100%;
+    padding: 14px 44px 14px 16px;
+    background: rgba(11,15,26,0.8);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    backdrop-filter: blur(8px);
+  }
+  select:focus {
+    border-color: rgba(59,130,246,0.45);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  }
+  select option { background: #0d1220; color: var(--text); }
+
+  /* ── BUTTON ── */
+  .generate-btn {
+    width: 100%;
+    padding: 15px 24px;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.25);
+  }
+  .generate-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .generate-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 45%; height: 200%;
+    background: rgba(255,255,255,0.14);
+    transform: skewX(-18deg);
+    transition: left 0.5s ease;
+  }
+  .generate-btn:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 0 8px 30px rgba(59,130,246,0.4), 0 4px 12px rgba(139,92,246,0.2);
+  }
+  .generate-btn:hover::before { opacity: 1; }
+  .generate-btn:hover::after { left: 130%; }
+  .generate-btn:active { transform: translateY(0) scale(0.998); }
+
+  .btn-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ── OUTPUT ── */
+  .output-area { margin-top: 28px; min-height: 40px; }
+
+  /* ── LOADER ── */
+  .loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0 28px;
+    gap: 18px;
+  }
+  .loader.visible { display: flex; }
+
+  .spinner-wrap { position: relative; width: 52px; height: 52px; }
+  .ring-outer {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--blue);
+    border-right-color: rgba(59,130,246,0.3);
+    animation: spin 0.85s linear infinite;
+  }
+  .ring-inner {
+    position: absolute; inset: 8px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-bottom-color: var(--purple);
+    border-left-color: rgba(139,92,246,0.3);
+    animation: spin 0.65s linear infinite reverse;
+  }
+  .ring-dot {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ring-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 10px var(--blue);
+    animation: blink 0.85s ease-in-out infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .countdown {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 38px;
+    font-weight: 500;
+    background: linear-gradient(135deg, var(--blue-light), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    animation: countPulse 1s ease-in-out infinite;
+  }
+  @keyframes countPulse { 0%,100%{opacity:0.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+
+  .loader-text {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── RESULT FADE ── */
+  .result-appear {
+    animation: resultFade 0.5s cubic-bezier(.4,0,.2,1) both;
+  }
+  @keyframes resultFade {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESULT HEADER ── */
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .result-title {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .result-count {
+    font-size: 11px;
+    color: var(--blue-light);
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.15);
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+
+  /* ── HASHTAG CHIPS ── */
+  .hashtag-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .hashtag-chip {
+    background: var(--tag-bg);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 8px;
+    padding: 9px 15px;
+    font-size: 13px;
+    color: var(--blue-light);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    transition: all 0.2s cubic-bezier(.4,0,.2,1);
+    cursor: default;
+    animation: chipIn 0.4s ease both;
+  }
+  .hashtag-chip:nth-child(1)  { animation-delay:0.02s }
+  .hashtag-chip:nth-child(2)  { animation-delay:0.04s }
+  .hashtag-chip:nth-child(3)  { animation-delay:0.06s }
+  .hashtag-chip:nth-child(4)  { animation-delay:0.08s }
+  .hashtag-chip:nth-child(5)  { animation-delay:0.10s }
+  .hashtag-chip:nth-child(6)  { animation-delay:0.12s }
+  .hashtag-chip:nth-child(7)  { animation-delay:0.14s }
+  .hashtag-chip:nth-child(8)  { animation-delay:0.16s }
+  .hashtag-chip:nth-child(9)  { animation-delay:0.18s }
+  .hashtag-chip:nth-child(10) { animation-delay:0.20s }
+
+  @keyframes chipIn {
+    from { opacity:0; transform:scale(0.9) translateY(6px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+  .hashtag-chip:hover {
+    background: rgba(59,130,246,0.14);
+    border-color: rgba(59,130,246,0.4);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(59,130,246,0.15);
+  }
+
+  /* ── CAPTIONS ── */
+  .caption-block {
+    background: rgba(11,15,26,0.6);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: chipIn 0.4s ease both;
+  }
+  .caption-block:nth-child(2) { animation-delay:0.05s }
+  .caption-block:nth-child(3) { animation-delay:0.12s }
+  .caption-block::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 10%; bottom: 10%;
+    width: 2px;
+    background: linear-gradient(180deg, var(--blue), var(--purple));
+    border-radius: 2px;
+  }
+  .caption-block:hover {
+    border-color: rgba(59,130,246,0.25);
+    box-shadow: 0 4px 20px rgba(59,130,246,0.08);
+  }
+  .caption-num {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    font-family: 'JetBrains Mono', monospace;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  .caption-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  /* ── COPY ── */
+  .copy-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    background: rgba(59,130,246,0.07);
+    border: 1px solid rgba(59,130,246,0.18);
+    border-radius: 9px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(.4,0,.2,1);
+  }
+  .copy-btn:hover {
+    background: rgba(59,130,246,0.14);
+    border-color: rgba(59,130,246,0.4);
+    color: var(--blue-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.15);
+  }
+  .copy-btn:active { transform: translateY(0); }
+  .copy-btn.copied {
+    background: rgba(34,197,94,0.1);
+    border-color: rgba(34,197,94,0.35);
+    color: var(--success);
+    box-shadow: 0 4px 12px rgba(34,197,94,0.12);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 0 16px 48px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  footer .dot {
+    display: inline-block;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--muted2);
+    margin: 0 8px;
+    vertical-align: middle;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 520px) {
+    header { padding-top: 44px; }
+    .card { padding: 22px 18px; }
+    h1 { font-size: 1.85rem; }
+    .stats { gap: 20px; }
+    .tab-btn { padding: 9px 18px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<header>
+  <div class="badge">Free Premium Tool</div>
+  <h1>Viral <span class="grad">Hashtag</span><br>Generator</h1>
+  <p class="subtitle">Generate trending hashtags and scroll-stopping captions for any niche — free, fast, and always fresh.</p>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num">27+</div><div class="stat-label">Topics</div></div>
+  <div class="stat"><div class="stat-num">810+</div><div class="stat-label">Hashtags</div></div>
+  <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Free</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab-track">
+    <button class="tab-btn active" onclick="switchTab('hashtag', this)"># Hashtag Generator</button>
+    <button class="tab-btn" onclick="switchTab('caption', this)">✎ Caption Generator</button>
+  </div>
+</div>
+
+<main>
+  <!-- HASHTAG PANEL -->
+  <div class="panel active" id="panel-hashtag">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">#</div>
+        <div class="section-info">
+          <h2>Hashtag Generator</h2>
+          <p>10 unique viral hashtags per generate</p>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <label class="field-label">Select Your Topic</label>
+      <div class="select-wrap">
+        <select id="hashtag-topic">
+          <option value="">— Choose a topic —</option>
+          <option>Sad</option><option>Attitude</option><option>Motivation</option>
+          <option>Money</option><option>Comedy</option><option>Study</option>
+          <option>Love</option><option>Breakup</option><option>Gym</option>
+          <option>Gaming</option><option>Travel</option><option>Lifestyle</option>
+          <option>Business</option><option>Fitness</option><option>Fashion</option>
+          <option>Quotes</option><option>Success</option><option>Friendship</option>
+          <option>Tech</option><option>Food</option><option>Nature</option>
+          <option>Art</option><option>Music</option><option>Dance</option>
+          <option>Mindset</option><option>Health</option><option>Photography</option>
+        </select>
+      </div>
+      <button class="generate-btn" onclick="generateHashtags()">
+        <div class="btn-inner">✦ Generate Hashtags</div>
+      </button>
+      <div class="output-area" id="hashtag-output">
+        <div class="loader" id="hashtag-loader">
+          <div class="spinner-wrap">
+            <div class="ring-outer"></div>
+            <div class="ring-inner"></div>
+            <div class="ring-dot"></div>
+          </div>
+          <div class="countdown" id="hashtag-count">3</div>
+          <div class="loader-text">Fetching viral tags...</div>
+        </div>
+        <div id="hashtag-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPTION PANEL -->
+  <div class="panel" id="panel-caption">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">✎</div>
+        <div class="section-info">
+          <h2>Caption Generator</h2>
+          <p>2 clean, engaging captions per generate</p>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <label class="field-label">Select Your Topic</label>
+      <div class="select-wrap">
+        <select id="caption-topic">
+          <option value="">— Choose a topic —</option>
+          <option>Sad</option><option>Attitude</option><option>Motivation</option>
+          <option>Money</option><option>Comedy</option><option>Study</option>
+          <option>Love</option><option>Breakup</option><option>Gym</option>
+          <option>Gaming</option><option>Travel</option><option>Lifestyle</option>
+          <option>Business</option><option>Fitness</option><option>Fashion</option>
+          <option>Quotes</option><option>Success</option><option>Friendship</option>
+          <option>Tech</option><option>Food</option><option>Nature</option>
+          <option>Art</option><option>Music</option><option>Dance</option>
+          <option>Mindset</option><option>Health</option><option>Photography</option>
+        </select>
+      </div>
+      <button class="generate-btn" onclick="generateCaptions()">
+        <div class="btn-inner">✦ Generate Caption</div>
+      </button>
+      <div class="output-area" id="caption-output">
+        <div class="loader" id="caption-loader">
+          <div class="spinner-wrap">
+            <div class="ring-outer"></div>
+            <div class="ring-inner"></div>
+            <div class="ring-dot"></div>
+          </div>
+          <div class="countdown" id="caption-count">3</div>
+          <div class="loader-text">Crafting your caption...</div>
+        </div>
+        <div id="caption-result"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built for creators
+  <span class="dot"></span>
+  Free to use
+  <span class="dot"></span>
+  No signup required
+</footer>
+
+<script>
+const hashtagSets = {
+  Sad: [
+    ["#SadVibes","#BrokenHeart","#EmptyInside","#SadThoughts","#LonelyNights","#PainWithinMe","#SadSoul","#CryingAlone","#SilentTears","#FeelingLow"],
+    ["#HeartbreakHour","#SadQuotes","#MissingYou","#DarkMoments","#SadReality","#QuietPain","#NightsMissYou","#InnerStorm","#SilentSuffering","#WoundedHeart"],
+    ["#SadButTrue","#EmotionallyDrained","#FeelingBroken","#HeavyHeart","#SadLife","#OverthinkingMind","#TiredSoul","#TearsDontLie","#HiddenPain","#SadSeason"],
+  ],
+  Attitude: [
+    ["#AttitudeQuotes","#BoldMoves","#OwnItAlways","#NoApologies","#LevelUp","#SilentKiller","#QueenMode","#KingMindset","#ConfidenceIs","#RuleYourWorld"],
+    ["#AttitudeMatters","#BornBold","#NeverSettle","#HardToHandle","#SelfMade","#TooRealForFakes","#MyTermsMyRules","#BoldNotBroken","#UnapologeticallyMe","#CloutGame"],
+    ["#AttitudeCheck","#StayDangerous","#SilentButDeadly","#ToxicFree","#OwnYourStory","#NoBadVibes","#AlwaysWinning","#ChaosInOrder","#UnstoppableForce","#CharacterBuilt"],
+  ],
+  Motivation: [
+    ["#MotivationDaily","#RiseAndGrind","#ChaseYourDreams","#NeverQuit","#PushHarder","#MindOverMatter","#DailyDrive","#GrindSeason","#StartToday","#FuelYourFire"],
+    ["#StayMotivated","#BuildYourFuture","#GoalGetter","#DreamBig","#HardWorkPaysOff","#KeepPushing","#WinnersMindset","#MorningMotivation","#BeyondLimits","#EarnIt"],
+    ["#MotivatedMind","#NoExcuses","#SuccessHabits","#DoItScared","#ConsistencyWins","#RiseTaller","#EverydayProgress","#BelieveInWork","#GrowthMindset","#DontStopEver"],
+  ],
+  Money: [
+    ["#MoneyMindset","#CashFlow","#WealthBuilding","#MoneyMoves","#FinancialFreedom","#GetPaid","#MillionaireMind","#SecureBag","#MoneyTalks","#HustleForMore"],
+    ["#BuildWealth","#MoneyGoals","#PassiveIncome","#InvestInYou","#FinancialGoals","#MoneyGang","#WealthMentality","#EarnMoreLive","#CashMoneyCrew","#DollarDriven"],
+    ["#WealthCreation","#MoneyMatters","#MoneyMindsetShift","#InvestNow","#SmartMoneyMoves","#GetRich","#CashKing","#LevelUpFinance","#MoneyFlow","#WealthAlert"],
+  ],
+  Comedy: [
+    ["#FunnyMoments","#LaughDaily","#ComedyCentral","#MakeThemLaugh","#HumorIsLife","#JokeOfTheDay","#LaughOutLoud","#WeirdHumor","#FunnyStuff","#RelatableComedy"],
+    ["#ComedyVibes","#FunnyOrDie","#DailyLaughs","#TooFunny","#SillyMode","#HumorHeals","#LaughAndLive","#FunnyBones","#GoodVibesOnly","#JustForLaughs"],
+    ["#ComedyKing","#LaughingAlways","#FunnyFacts","#NonstopLaughs","#OddHumor","#InstantLaugh","#FunnyReels","#WittyWednesday","#ComedyGold","#CrackingUp"],
+  ],
+  Study: [
+    ["#StudyTime","#LearnEveryDay","#StudentLife","#StudyMotivation","#AcademicGoals","#FocusMode","#StudyGram","#ExamReady","#LearnMore","#GrindAndStudy"],
+    ["#StudyHard","#TopperMindset","#LearnAndGrow","#ClassroomVibes","#DeepStudy","#StudyWithMe","#SmartStudy","#EducateYourself","#BookwormLife","#ResultsDriven"],
+    ["#StudySession","#AcademicLife","#FocusAndFlow","#StudentGoals","#StudyNotes","#LearningNeverStops","#BrainWork","#StudyStreak","#PassWithFlying","#DailyStudy"],
+  ],
+  Love: [
+    ["#LoveQuotes","#TrueLove","#ForeverYours","#CoupleGoals","#LoveStory","#HeartFull","#InLoveWithYou","#RomanceIsReal","#LoveIsLife","#SoulConnection"],
+    ["#LoveVibes","#DeepInLove","#MyPerson","#LoveLasts","#LoveAlways","#PureHeart","#BoundByLove","#MadeForYou","#LoveWithout","#ChooseEachOther"],
+    ["#LoveDeeply","#RomanticizerMode","#LoveAndLight","#ForeverAndAlways","#MyEverything","#HeartToHeart","#TenderLove","#MeaningfulLove","#ChooseYou","#LoveLanguage"],
+  ],
+  Breakup: [
+    ["#BreakupQuotes","#MovingOn","#NewBeginning","#HealAndGrow","#LetItGo","#BetterAlone","#DoneForGood","#GlowUpAlert","#ReboundMode","#StartFresh"],
+    ["#BreakupVibes","#SelfRespect","#NoLookingBack","#WorthMore","#GlowUpSeason","#AloneBetter","#ChapterClosed","#SelfLoveFirst","#OverYou","#FocusOnMe"],
+    ["#BreakupMode","#StrongerNow","#ChoosePeace","#HeartHealed","#DoneWithDrama","#FindingMe","#SingleAndWinning","#UnfollowHim","#NewMeWho","#FreeFromYou"],
+  ],
+  Gym: [
+    ["#GymLife","#GymMotivation","#FitGoals","#LiftDaily","#GainSeason","#NoRestDay","#BeastMode","#GymVibes","#GrindAndGain","#SweatEveryDay"],
+    ["#GymAddicted","#WorkoutTime","#LiftHeavy","#FitnessFirst","#BuildingBod","#GymGang","#MuscleUp","#FitFam","#GymInspiration","#SweatsForGains"],
+    ["#GymGrind","#StrongNotSkinny","#FitLifeDaily","#GainsTrain","#RepAfterRep","#GymIsTherapy","#BulkSeason","#SweatAndGlow","#LiftAndLead","#GymProgress"],
+  ],
+  Gaming: [
+    ["#GamingLife","#GamerMode","#ProGamer","#GameOn","#WinOrLearn","#JustOneMoreGame","#GamingVibes","#LevelUp","#GamingCommunity","#NeverQuit"],
+    ["#GamingSetup","#PCGaming","#ConsoleGamer","#MobileGaming","#GameNight","#GamingAddict","#ControllerLife","#OnlineGaming","#GamingGoals","#EliteGamer"],
+    ["#GamingMoments","#GrindingHard","#ToxicFreeGaming","#GamerForLife","#DailyGrind","#CarryHard","#SoloQueue","#GamingHighlight","#ScrimLife","#GodMode"],
+  ],
+  Travel: [
+    ["#TravelLife","#WanderlustVibes","#ExploreEverywhere","#TravelGoals","#SoloTravel","#TravelDiaries","#NewDestination","#TravelAddict","#RoamFree","#AdventureTime"],
+    ["#TravelGram","#ExploreMore","#TravelEveryday","#WorldTraveler","#TravelMoments","#PackYourBags","#TravelInspired","#NomadLife","#TravelThirst","#JourneyAwaits"],
+    ["#TravelVlog","#HiddenGems","#TravelBucketList","#PassportReady","#TravelDeep","#LocalExplorer","#UltimateTravel","#TravelJourney","#SeekAndFind","#WanderlustGoals"],
+  ],
+  Lifestyle: [
+    ["#LifestyleGoals","#GoodLifeVibes","#LuxuryLifestyle","#LivingMyBest","#LifestyleCheck","#DailyVibes","#ModernLife","#LifestyleBlogger","#LuxeLife","#ElevatedLiving"],
+    ["#LifestyleDiary","#AestheticLife","#TrendyVibes","#GlowUpLife","#LiveLaughLove","#MinimalistLife","#SlowLiving","#SimpleLuxury","#LifestyleInspo","#CuratedLife"],
+    ["#LifestyleMindset","#ChillVibes","#CurateCalmLife","#LivingWell","#GoodEnergyOnly","#PositiveLifestyle","#CleanLiving","#LifestyleContent","#ThatGirlLife","#AuraVibes"],
+  ],
+  Business: [
+    ["#BusinessMindset","#EntrepreneurLife","#StartupVibes","#BuildYourBrand","#BusinessGoals","#CEOMindset","#HustleHard","#BusinessTips","#GrowYourBiz","#BossMode"],
+    ["#BusinessGrowth","#EntrepreneurMindset","#SmallBizOwner","#StartupLife","#SelfEmployed","#BrandBuilder","#OnlineBusiness","#DigitalEntrepreneur","#BusinessStrategy","#ScaleUp"],
+    ["#BusinessSuccess","#FreelanceLife","#ClientGoals","#BusinessOwner","#ProfitMindset","#PivotAndGrow","#NextLevelBiz","#ContentBusiness","#BusinessTrends","#MakeMoves"],
+  ],
+  Fitness: [
+    ["#FitnessJourney","#HealthyHabits","#FitAndFab","#WorkoutDaily","#FitnessGoals","#FitBody","#ActiveLifestyle","#FitnessMotivation","#EatCleanTrainMean","#BodyTransformation"],
+    ["#FitnessFreak","#StayActive","#FitnessTips","#LiftAndLive","#TrainHard","#FitnessCommunity","#HealthFirst","#FitnessLife","#DailySweat","#FitFamily"],
+    ["#FitnessMode","#CleanBodyCleanMind","#FitnessAddicted","#FitProgress","#GymFit","#FitToWin","#ActiveEveryDay","#FitnessChallenge","#SweatItOut","#FitnessVibes"],
+  ],
+  Fashion: [
+    ["#FashionVibes","#StyleGoals","#OOTDCheck","#FashionInspo","#WearItBold","#FashionForward","#StyleStatement","#DressToImpress","#FashionDaily","#LookBook"],
+    ["#FashionGram","#StyleDiaries","#TrendAlert","#FashionFiend","#OutfitOfTheDay","#StreetStyle","#FashionWeek","#LuxuryFashion","#CasualChic","#StyleInspiration"],
+    ["#FashionMode","#WardrobeGoals","#FashionBlogger","#StyledByMe","#FashionEdit","#ModernStyle","#StyleUp","#FashionContent","#SartorialVibes","#FashionFwd"],
+  ],
+  Quotes: [
+    ["#QuoteOfTheDay","#WisdomWords","#LifeQuotes","#ThinkDeeply","#WordsThatHit","#DailyQuotes","#InspiringWords","#PowerfulQuotes","#MindfulWords","#QuotesThatMotivate"],
+    ["#QuoteLife","#WordsToLiveBy","#DailyWisdom","#QuoteGram","#QuotesThatHeal","#TruthInWords","#LifeLessons","#QuotesMatter","#ThoughtfulWords","#MeaningfulQuotes"],
+    ["#QuoteMode","#ShortAndPowerful","#WordsThatMove","#QuoteAddicted","#RealTalkQuotes","#DeepThoughts","#QuoteInspiration","#WordsOfWisdom","#LiveByThis","#QuoteCommunity"],
+  ],
+  Success: [
+    ["#SuccessMindset","#WinningDaily","#SuccessHabits","#BuildToWin","#SuccessStory","#SuccessDriven","#ChampionMindset","#WinnerMentality","#SuccessIsEarned","#TopTier"],
+    ["#SuccessVibes","#ChaseSuccess","#SuccessJourney","#WinMode","#SuccessFactors","#SuccessGoals","#DrivenForSuccess","#MillionDollarHabits","#SuccessQuotes","#BornToWin"],
+    ["#SuccessDaily","#NeverLose","#SuccessAlert","#EarnYourSuccess","#SuccessIsMindset","#BuildSuccess","#SuccessReady","#CelebratWins","#SuccessInProgress","#SuccessBlueprint"],
+  ],
+  Friendship: [
+    ["#FriendshipGoals","#BestFriendsForever","#SquadGoals","#FriendsForLife","#FoundMyPeople","#TrueBlue","#FriendGroupVibes","#FriendshipMatters","#BestiesForever","#CrazyFriends"],
+    ["#FriendshipQuotes","#TrueFriends","#RideOrDie","#FriendshipBond","#ThankfulForYou","#SoulFriends","#FriendshipDay","#ForeverFriends","#SquadUp","#FriendshipIsLife"],
+    ["#FriendsMakeLife","#InThisTogether","#FriendshipVibes","#MyTribe","#FriendshipMemories","#GoodFriends","#NeedMySquad","#MadeMemories","#ChaoticFriends","#FriendshipReal"],
+  ],
+  Tech: [
+    ["#TechVibes","#FutureTech","#TechLovers","#InnovationNow","#TechWorld","#CodingLife","#TechTrends","#AIFuture","#TechCommunity","#GadgetLife"],
+    ["#TechDaily","#DigitalFuture","#TechInspired","#CodeAndCreate","#TechGuru","#BuildWithTech","#SoftwareDev","#TechBlogger","#StartupTech","#TechDriven"],
+    ["#TechMode","#EmergedTech","#NextGenTech","#TechStarter","#BuildApps","#TechCareers","#DigitalBuilder","#TechMinds","#TechForGood","#TechIsLife"],
+  ],
+  Food: [
+    ["#FoodLovers","#FoodPhotography","#FoodVibes","#EatEverything","#FoodDiary","#FoodGram","#DailyEats","#FoodieLife","#CravingsBad","#HomeCooking"],
+    ["#FoodInspo","#FoodComa","#NomNomNom","#EatWell","#FoodContent","#FoodBlogger","#StreetFood","#FoodHunter","#CuisineGoals","#FoodAesthetic"],
+    ["#FoodTrends","#FoodChallenge","#TasteOfLife","#FoodFirst","#FoodAddicted","#EatThisNow","#FoodStyling","#GoodFoodMood","#LunchGoals","#FoodExplorer"],
+  ],
+  Nature: [
+    ["#NatureVibes","#WildAndFree","#NatureLovers","#GreenEarth","#NaturePhotography","#OutdoorLife","#IntoTheWild","#NatureHeals","#EarthBeauty","#NatureDaily"],
+    ["#NatureGram","#GoOutside","#PureNature","#NatureWalk","#NatureFirst","#EcoLife","#HikingVibes","#ForestBathing","#WildernessLife","#NatureInspired"],
+    ["#NatureMode","#SunriseMoments","#CloudChaser","#MountainSoul","#NatureTherapy","#OceanVibes","#RiverSide","#NatureAddict","#GoldenHour","#NatureMind"],
+  ],
+  Art: [
+    ["#ArtVibes","#CreativeLife","#ArtEveryDay","#MakeArt","#ArtInspiration","#DigitalArt","#ArtistsOnInstagram","#ArtLovers","#DrawEveryDay","#CreativeJuice"],
+    ["#ArtMode","#PaintAndCreate","#ArtGram","#AbstractArt","#ModernArtist","#SketchDaily","#ArtCommunity","#ArtAddicted","#CanvasLife","#ArtIsMySoul"],
+    ["#ArtWork","#CreateAlways","#ArtIsExpression","#ArtisticSoul","#DrawingDaily","#MixedMedia","#ArtForAll","#StreetArt","#ArtJourney","#CreativeVision"],
+  ],
+  Music: [
+    ["#MusicVibes","#MusicIsLife","#PlayLoud","#SoundOfSoul","#MusicLover","#BeatDrops","#MusicDaily","#SoundGood","#MusicMood","#HeadphonesOn"],
+    ["#MusicGram","#LyricsHit","#MusicInspired","#PlaylistVibes","#MusicAddicted","#MusicTherapy","#SoundCheck","#MusicScene","#BeatMaker","#MusicCommunity"],
+    ["#MusicMode","#NewMusic","#MusicForever","#ListenUp","#MusicNation","#MusicAndSoul","#MusicFirst","#LiveForMusic","#MusicMatters","#SoundtrackedLife"],
+  ],
+  Dance: [
+    ["#DanceVibes","#DanceLife","#MoveYourBody","#DanceDaily","#DanceLove","#BornToDance","#DanceMode","#DanceInspiration","#DanceCommunity","#GrooveOn"],
+    ["#DanceGram","#DanceChallenge","#DanceIsLife","#FeelTheRhythm","#DanceAddicted","#FlowAndMove","#StreetDance","#DanceWithMe","#DanceForm","#DanceTrend"],
+    ["#DanceMoves","#BodyMovement","#DanceFit","#PerformanceDay","#RhythmInMe","#DanceTalent","#DancePassion","#StageDancer","#DanceCouple","#DanceSoul"],
+  ],
+  Mindset: [
+    ["#MindsetIsEverything","#GrowthMindset","#ThinkDifferent","#PowerOfMind","#MindsetShift","#MindMatters","#ThinkBetter","#MindsetGoals","#ConqueredMind","#ControlYourMind"],
+    ["#MindsetReset","#PositiveMind","#MindsetWork","#MindsetAlert","#ExpandYourMind","#MindsetMastery","#WinnerMindset","#ShiftYourThinking","#MindFirst","#ThinkAndWin"],
+    ["#MindsetMode","#ReprogramMind","#MindsetMotivation","#BuildYourMind","#DisciplinedMind","#MindHealth","#MindsetJourney","#ClearMindSet","#MindsetKing","#MindsetQueen"],
+  ],
+  Health: [
+    ["#HealthFirst","#HealthyLife","#HealthIsWealth","#HealthyHabits","#HealthAndWellness","#HealthGoals","#MindBodySoul","#WellnessJourney","#HealthTips","#LiveHealthy"],
+    ["#HealthVibes","#CleanEating","#HealthyChoices","#WellnessDaily","#HealthyMindset","#HealthConscious","#BodyPositive","#HealthyRoutine","#HealthyEating","#WellnessMode"],
+    ["#HealthAlert","#NaturalHealth","#HealFromWithin","#HolisticHealth","#HealthyInside","#MentalHealthMatters","#PhysicalHealth","#HealthForever","#WellBeingGoals","#HealthDaily"],
+  ],
+  Photography: [
+    ["#PhotoVibes","#ShootDaily","#PhotographyLife","#LensLife","#GoldenShot","#PhotoOfTheDay","#PhotographyInspired","#CaptureEverything","#CameraLovers","#BehindTheLens"],
+    ["#PhotographyMode","#PhotoGram","#ClickAndCapture","#PhotographyTips","#LightAndShadow","#PhotoLovers","#ShotOnCamera","#PhotographyCommunity","#NaturePhotography","#UrbanPhotography"],
+    ["#PhotographyArt","#EyeForDetail","#PerfectShot","#PhotographerLife","#FrameIt","#VisualStorytelling","#PhotographyIsArt","#PhotoAddict","#CaptureTheMoment","#ShotWithLove"],
+  ],
+};
+
+const captionSets = {
+  Sad: [
+    ["Some chapters are painful, but they still need to be written.","The silence after a storm is the loudest part."],
+    ["Not every wound shows, but every wound counts.","Sometimes the hardest thing is feeling everything at once."],
+    ["Pain is not a weakness. It is proof you felt something real.","Even the longest nights eventually run out of darkness."],
+  ],
+  Attitude: [
+    ["I did not come this far to ask for permission.","My level is not everyone's destination."],
+    ["Soft enough to care. Hard enough to walk away.","I carry my own crown. No one hands me anything."],
+    ["The loudest room does not always hold the realest people.","My silence is not ignorance. It is a choice."],
+  ],
+  Motivation: [
+    ["Every day you show up is a day they never expected you to.","The gap between where you are and where you want to be is closed by action alone."],
+    ["Start before you are ready. Improve as you go.","Progress does not announce itself. You have to look for it."],
+    ["The version of you that keeps going will be proud.","One hard day does not define a hundred consistent ones."],
+  ],
+  Money: [
+    ["Money is a tool. Build wisely or get built around.","The richest people work on their future at midnight."],
+    ["Stop spending time where there is no return.","Every financial move you make today is a message to your future self."],
+    ["Earn in silence. Let the results do the announcing.","Your income is a reflection of the problems you are willing to solve."],
+  ],
+  Comedy: [
+    ["My life is basically a blooper reel with no one watching.","I did not come with a manual. That is your problem now."],
+    ["I take naps seriously. It is my cardio.","My humor is free but my patience is not."],
+    ["I said what I said and I meant it less than half of it.","Running on coffee and questionable decisions since forever."],
+  ],
+  Study: [
+    ["Late nights and highlighted pages. This is the grind nobody films.","Study not to pass. Study to actually know things."],
+    ["Every hour you invest in learning is an hour working for your future self.","Confusion is just the beginning of understanding."],
+    ["The library stays open. So does your potential.","The ones who succeed are the ones who kept studying when no one was watching."],
+  ],
+  Love: [
+    ["Finding someone who stays is still the rarest thing.","Love is not loud. It shows up quietly in the smallest things."],
+    ["You do not have to explain real love. It just fits.","The right person makes ordinary moments feel like something worth keeping."],
+    ["Choose someone who keeps choosing you every single day.","Love that lasts is built from a thousand tiny choices."],
+  ],
+  Breakup: [
+    ["Some endings are not failures. They are redirections.","Leaving was not giving up. It was choosing myself for once."],
+    ["The hardest part of a breakup is unlearning someone who felt like home.","I am not bitter. I am redirected."],
+    ["Closed that chapter. The next one has better writing.","You outgrow people. That is not betrayal. That is growth."],
+  ],
+  Gym: [
+    ["The bar does not care about your excuses. Lift anyway.","Discipline built this body. One rep at a time."],
+    ["Nobody sees the early mornings. They only see the results.","The gym is the one place where showing up is always enough to start."],
+    ["Soreness means you were present. Keep going.","Train like it matters. Because it does."],
+  ],
+  Gaming: [
+    ["The difference between winning and losing is which one you are willing to learn from.","Every game is a problem set. Play it like one."],
+    ["Ranked or casual, show up with the same focus.","The real W is staying calm when everything is going wrong."],
+    ["They called it a waste of time until they saw the reflexes.","Games taught me patience. Competition taught me resilience."],
+  ],
+  Travel: [
+    ["Every city you visit teaches you something your hometown could not.","The world is not a destination. It is a classroom with better views."],
+    ["Pack light. Stay curious. Leave nothing behind but footprints.","You never truly understand the size of the world until you start moving through it."],
+    ["Travel does not make you rich. It makes you full.","The best stories come from the trips that did not go according to plan."],
+  ],
+  Lifestyle: [
+    ["Design your days like you mean them.","Your environment reflects your standards. Set them high."],
+    ["Slow mornings and intentional evenings change everything.","The life you want already exists in the habits you build today."],
+    ["Less noise. More clarity. That is the upgrade.","Curate your life the way you curate your feed. Intentionally."],
+  ],
+  Business: [
+    ["The business you build is a reflection of the problems you took seriously.","Stop waiting for perfect conditions. Build anyway."],
+    ["Real entrepreneurs do not compete. They create.","The market rewards consistency far more than occasional brilliance."],
+    ["Build it like it will outlast you. Because it should.","Every no gets you one conversation closer to the right yes."],
+  ],
+  Fitness: [
+    ["Your body keeps score. Make sure you are winning.","Fitness is not a phase. It is a practice you never graduate from."],
+    ["Strong is not a look. It is a decision made daily.","Start with consistency. The results will eventually catch up."],
+    ["The best fitness plan is the one you actually follow.","Rest days are not weakness. They are part of the system."],
+  ],
+  Fashion: [
+    ["Style is what you say before you open your mouth.","Dress for the version of yourself you are still becoming."],
+    ["The best outfit is the one that makes you walk differently.","Fashion is temporary. Personal style is not."],
+    ["Clothes are a form of self-respect. Wear yours intentionally.","Your wardrobe does not need more. It needs purpose."],
+  ],
+  Quotes: [
+    ["Words hit hardest when they were written for someone else but landed on you.","The quote that changed you will not be the same one that changes them."],
+    ["Some sentences carry entire lifetimes in them.","The right words at the right time are a form of medicine."],
+    ["Read enough and you will eventually find the line that explains your whole life.","Words do not expire. They wait until you are ready."],
+  ],
+  Success: [
+    ["Success is not found at the top. It is built on the way up.","They will celebrate the result. They never saw the process."],
+    ["Every successful person has a version of themselves they had to outwork.","Consistency in the ordinary creates the extraordinary."],
+    ["Success is not about being the loudest in the room. It is about being the last one standing.","Earned it. Every single part of it."],
+  ],
+  Friendship: [
+    ["The people who show up when it costs them something are the ones worth keeping.","Real friendship is choosing each other without needing a reason."],
+    ["Not everyone who laughs with you is in your corner. Know the difference.","The best friendships feel like a group chat that never ends."],
+    ["Good friends are not hard to find. They are hard to lose.","Find the ones who make ordinary days feel like plans worth keeping."],
+  ],
+  Tech: [
+    ["Technology does not solve problems. People who understand it do.","The next great idea is being built by someone who started learning last year."],
+    ["Code is just logic written in a language machines speak. Learn the language.","Every innovation was once called impossible by someone who stopped thinking."],
+    ["Tech moves fast. The ones who keep learning move faster.","Build things that make hard problems feel simple."],
+  ],
+  Food: [
+    ["The best meals are the ones shared without looking at the time.","Food is not fuel. It is memory, culture, and intention."],
+    ["Cooking for yourself is a radical act of self-respect.","Every dish carries a story from the hands that made it."],
+    ["Eat well enough that your body thanks you tomorrow.","The table is the one place where everyone belongs."],
+  ],
+  Nature: [
+    ["The natural world is always moving. We are the ones who stood still.","Go outside enough and the noise inside gets quieter."],
+    ["Nature does not rush and yet everything gets done.","The best therapy has no waiting list. It is called outside."],
+    ["There is wisdom in watching seasons change without resistance.","Every time you return to nature, you return to yourself."],
+  ],
+  Art: [
+    ["Art is what happens when you stop waiting to feel ready.","Every piece you make is a version of yourself you left behind."],
+    ["Create without needing it to be understood immediately.","The blank canvas is not intimidating. It is an invitation."],
+    ["Art does not ask for permission. It only asks that you start.","Make things because they deserve to exist. That is enough."],
+  ],
+  Music: [
+    ["Music is the only language everyone understands before they learn the words.","The right song does not just play. It explains you to yourself."],
+    ["Some albums are not listened to. They are lived through.","Music fills the spaces where words fall short."],
+    ["You can measure a person by what they listen to when no one is around.","Sound is emotion before it becomes language."],
+  ],
+  Dance: [
+    ["Dance is the one conversation you can have without saying a single word.","Move like the rhythm already lives inside you. Because it does."],
+    ["Every body that dances is telling a story. Listen differently.","Dance is not performance. It is release."],
+    ["The floor is the one place where thinking too much gets in the way.","Let your body remember what your mind keeps overcomplicating."],
+  ],
+  Mindset: [
+    ["You cannot control what happens. You can always control how you respond.","Your thoughts are not facts. Learn to cross-examine them."],
+    ["The mind is a tool. Use it. Do not let it use you.","Mindset is not positive thinking. It is accurate thinking."],
+    ["Change how you see it first. Then watch how it changes.","The environment inside your head matters more than the one around you."],
+  ],
+  Health: [
+    ["Taking care of your body is not vanity. It is strategy.","Health is not a destination. It is the discipline of choosing it daily."],
+    ["The investment with the highest return is the one you make in your own body.","You cannot pour from an empty cup. Fill yours first."],
+    ["Healing is not linear. Show up for it anyway.","Small healthy habits over long periods of time become extraordinary results."],
+  ],
+  Photography: [
+    ["A great photograph does not capture a moment. It creates one.","The best camera is the one that makes you look twice."],
+    ["Light is the language. Composition is the grammar. You write the sentence.","Every frame you take is a decision about what deserves to be remembered."],
+    ["Photography is the art of choosing what not to include.","Shoot what moves you. Everything else is just practice."],
+  ],
+};
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+let lastHashtagSet = -1;
+let lastCaptionSet = -1;
+
+function getUniqueSet(arr, lastIdx) {
+  if (arr.length <= 1) return { idx: 0, set: arr[0] };
+  let idx;
+  do { idx = Math.floor(Math.random() * arr.length); } while (idx === lastIdx);
+  return { idx, set: arr[idx] };
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function runLoader(loaderId, countId, seconds, callback) {
+  const loader = document.getElementById(loaderId);
+  const counter = document.getElementById(countId);
+  loader.classList.add('visible');
+  counter.textContent = seconds;
+  let remaining = seconds;
+  const interval = setInterval(() => {
+    remaining--;
+    counter.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(interval);
+      loader.classList.remove('visible');
+      callback();
+    }
+  }, 1000);
+}
+
+function makeCopyBtn(textToCopy) {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  const svgIcon = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+  btn.innerHTML = `${svgIcon} Copy All`;
+  btn.onclick = () => {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      btn.innerHTML = `&#10003; Copied!`;
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = `${svgIcon} Copy All`;
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  };
+  return btn;
+}
+
+function generateHashtags() {
+  const topic = document.getElementById('hashtag-topic').value;
+  const resultEl = document.getElementById('hashtag-result');
+  if (!topic) {
+    resultEl.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:12px 0;font-family:\'JetBrains Mono\',monospace">Please select a topic first.</p>';
+    return;
+  }
+  resultEl.innerHTML = '';
+  runLoader('hashtag-loader', 'hashtag-count', 3, () => {
+    const { idx, set } = getUniqueSet(hashtagSets[topic], lastHashtagSet);
+    lastHashtagSet = idx;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'result-appear';
+
+    const header = document.createElement('div');
+    header.className = 'result-header';
+    header.innerHTML = `<span class="result-title">Generated Hashtags</span><span class="result-count">${set.length} tags</span>`;
+    wrap.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'hashtag-grid';
+    set.forEach(tag => {
+      const chip = document.createElement('div');
+      chip.className = 'hashtag-chip';
+      chip.textContent = tag;
+      grid.appendChild(chip);
+    });
+    wrap.appendChild(grid);
+
+    const copyRow = document.createElement('div');
+    copyRow.className = 'copy-row';
+    copyRow.appendChild(makeCopyBtn(set.join(' ')));
+    wrap.appendChild(copyRow);
+    resultEl.appendChild(wrap);
+  });
+}
+
+function generateCaptions() {
+  const topic = document.getElementById('caption-topic').value;
+  const resultEl = document.getElementById('caption-result');
+  if (!topic) {
+    resultEl.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:12px 0;font-family:\'JetBrains Mono\',monospace">Please select a topic first.</p>';
+    return;
+  }
+  resultEl.innerHTML = '';
+  runLoader('caption-loader', 'caption-count', 3, () => {
+    const { idx, set } = getUniqueSet(captionSets[topic], lastCaptionSet);
+    lastCaptionSet = idx;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'result-appear';
+
+    const header = document.createElement('div');
+    header.className = 'result-header';
+    header.innerHTML = `<span class="result-title">Generated Captions</span><span class="result-count">${set.length} captions</span>`;
+    wrap.appendChild(header);
+
+    set.forEach((caption, i) => {
+      const block = document.createElement('div');
+      block.className = 'caption-block';
+      block.innerHTML = `<span class="caption-num">Caption ${i + 1}</span><span class="caption-text">${caption}</span>`;
+      wrap.appendChild(block);
+    });
+
+    const copyRow = document.createElement('div');
+    copyRow.className = 'copy-row';
+    copyRow.appendChild(makeCopyBtn(set.join('\n\n')));
+    wrap.appendChild(copyRow);
+    resultEl.appendChild(wrap);
+  });
+}
+</script>
+</body>
+</html>
