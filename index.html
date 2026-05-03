@@ -254,6 +254,31 @@ function closeAbout() {
     padding: 0 16px 100px;
     animation: fadeUp 0.7s 0.4s ease both;
   }
+  <div style="margin:40px 0; text-align:center;">
+  <button onclick="openAbout()" style="padding:12px 25px; background:#ff0055; color:white; border:none; border-radius:20px;">
+    About Us
+  </button>
+</div>
+
+<div id="aboutBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; color:black; padding:20px; border-radius:10px; width:80%; max-width:300px; text-align:center; z-index:9999;">
+  <h2>About Us</h2>
+  <p>Free viral hashtag generator tool for creators 🚀</p>
+  <p><b>Founder:</b> @zentmarvel</p>
+
+  <button onclick="closeAbout()" style="margin-top:10px; padding:8px 15px; background:red; color:white; border:none; border-radius:10px;">
+    Close
+  </button>
+</div>
+
+<script>
+function openAbout() {
+  document.getElementById("aboutBox").style.display = "block";
+}
+
+function closeAbout() {
+  document.getElementById("aboutBox").style.display = "none";
+}
+</script>
 
   .panel { display: none; }
   .panel.active { display: block; }
