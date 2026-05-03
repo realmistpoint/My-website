@@ -65,7 +65,34 @@
   @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
   @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
   @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-25px)} }
+<!-- About Button -->
+<div style="margin-top:40px; text-align:center;">
+  <button onclick="openAbout()" style="padding:10px 20px; border:none; border-radius:20px; background:#000; color:#fff; cursor:pointer;">
+    About Us
+  </button>
+</div>
 
+<!-- Popup Box -->
+<div id="aboutBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; color:black; padding:20px; border-radius:10px; width:80%; max-width:300px; box-shadow:0 0 10px rgba(0,0,0,0.5); text-align:center;">
+  
+  <h2>About Us</h2>
+  <p>We provide free viral hashtag generator tool to help creators grow on Instagram and social media faster.</p>
+  <p><b>Founder:</b> @zentmarvel</p>
+
+  <button onclick="closeAbout()" style="margin-top:10px; padding:8px 15px; border:none; background:red; color:white; border-radius:10px; cursor:pointer;">
+    Close
+  </button>
+</div>
+
+<script>
+function openAbout() {
+  document.getElementById("aboutBox").style.display = "block";
+}
+
+function closeAbout() {
+  document.getElementById("aboutBox").style.display = "none";
+}
+</script>
   /* Grid texture */
   body::before {
     content: '';
