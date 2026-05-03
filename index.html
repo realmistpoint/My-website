@@ -65,21 +65,18 @@
   @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
   @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
   @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-25px)} }
-<!-- About Button -->
-<div style="margin-top:40px; text-align:center;">
-  <button onclick="openAbout()" style="padding:10px 20px; border:none; border-radius:20px; background:#000; color:#fff; cursor:pointer;">
+<div style="margin:40px 0; text-align:center;">
+  <button onclick="openAbout()" style="padding:12px 25px; background:#ff0055; color:white; border:none; border-radius:20px;">
     About Us
   </button>
 </div>
 
-<!-- Popup Box -->
-<div id="aboutBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; color:black; padding:20px; border-radius:10px; width:80%; max-width:300px; box-shadow:0 0 10px rgba(0,0,0,0.5); text-align:center;">
-  
+<div id="aboutBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; color:black; padding:20px; border-radius:10px; width:80%; max-width:300px; text-align:center; z-index:9999;">
   <h2>About Us</h2>
-  <p>We provide free viral hashtag generator tool to help creators grow on Instagram and social media faster.</p>
+  <p>Free viral hashtag generator tool for creators 🚀</p>
   <p><b>Founder:</b> @zentmarvel</p>
 
-  <button onclick="closeAbout()" style="margin-top:10px; padding:8px 15px; border:none; background:red; color:white; border-radius:10px; cursor:pointer;">
+  <button onclick="closeAbout()" style="margin-top:10px; padding:8px 15px; background:red; color:white; border:none; border-radius:10px;">
     Close
   </button>
 </div>
