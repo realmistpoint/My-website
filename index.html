@@ -78,6 +78,15 @@
     z-index: 0;
     pointer-events: none;
   }
+  <div>Total Visitors: <span id="counter">0</span></div>
+
+<script>
+fetch("https://api.countapi.xyz/hit/viralhashtag/visits")
+.then(res => res.json())
+.then(res => {
+  document.getElementById("counter").innerText = res.value;
+});
+</script>
 
   /* ── HEADER ── */
   header {
